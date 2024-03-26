@@ -2,6 +2,7 @@ package it.unibo.oop.lab.lambda;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -14,12 +15,16 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
- * This class will contain four utility functions on lists and maps, of which the first one is provided as example.
+ * This class will contain four utility functions on lists and maps, of which
+ * the first one is provided as example.
  * 
- * All such methods take as second argument a functional interface from the Java library (java.util.function).
- * This enables calling them by using the concise lambda syntax, as it's done in the main function.
+ * All such methods take as second argument a functional interface from the Java
+ * library (java.util.function).
+ * This enables calling them by using the concise lambda syntax, as it's done in
+ * the main function.
  *
- * Realize the three methods **WITHOUT** using the Stream library, but only leveraging the lambdas.
+ * Realize the three methods **WITHOUT** using the Stream library, but only
+ * leveraging the lambdas.
  *
  */
 public final class LambdaUtilities {
@@ -29,11 +34,11 @@ public final class LambdaUtilities {
 
     /**
      * @param list
-     *            the input list
+     *             the input list
      * @param op
-     *            the process to run on each element
+     *             the process to run on each element
      * @param <T>
-     *            element type
+     *             element type
      * @return a new list containing, for each element of list, the element and
      *         a processed version
      */
@@ -48,11 +53,11 @@ public final class LambdaUtilities {
 
     /**
      * @param list
-     *            input list
+     *             input list
      * @param pre
-     *            predicate to execute
+     *             predicate to execute
      * @param <T>
-     *            element type
+     *             element type
      * @return a list where each value is an Optional, holding the previous
      *         value only if the predicate passes, and an Empty optional
      *         otherwise.
@@ -61,18 +66,22 @@ public final class LambdaUtilities {
         /*
          * Suggestion: consider Optional.filter
          */
-        return null;
+        final List<Optional<T>> res = new ArrayList<>(list.size());
+        list.forEach(t -> {
+            res.add(Optional.of(t).filter(pre));
+        });
+        return res;
     }
 
     /**
      * @param list
-     *            input list
+     *             input list
      * @param op
-     *            a function that, for each element, computes a key
+     *             a function that, for each element, computes a key
      * @param <T>
-     *            element type
+     *             element type
      * @param <R>
-     *            key type
+     *             key type
      * @return a map that groups into categories each element of the input list,
      *         based on the mapping done by the function
      */
@@ -80,7 +89,14 @@ public final class LambdaUtilities {
         /*
          * Suggestion: consider Map.merge
          */
-        return null;
+        final Map<R, Set<T>> res = new HashMap<>();
+        list.forEach(t -> {
+            res.merge(op.apply(t), new HashSet<>(Set.of(t)), (s1, s2) -> {
+                s1.addAll(s2);
+                return s1;
+            });
+        });
+        return res;
     }
 
     /**
@@ -101,12 +117,16 @@ public final class LambdaUtilities {
          *
          * Keep in mind that a map can be iterated through its forEach method
          */
-        return null;
+        final Map<K, V> res = new HashMap<>();
+        map.forEach((key, val) -> {
+            res.put(key, val.orElse(def.get()));
+        });
+        return res;
     }
 
     /**
      * @param args
-     *            ignored
+     *             ignored
      */
     @SuppressWarnings("PMD.SystemPrintln")
     public static void main(final String[] args) {
