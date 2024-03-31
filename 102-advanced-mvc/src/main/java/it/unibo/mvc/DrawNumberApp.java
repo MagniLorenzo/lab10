@@ -1,12 +1,14 @@
 package it.unibo.mvc;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.StringTokenizer;
 
@@ -15,12 +17,16 @@ import it.unibo.mvc.Configuration.Builder;
 /**
  */
 public final class DrawNumberApp implements DrawNumberViewObserver {
-    private static final int MIN = 0;
-    private static final int MAX = 100;
-    private static final int ATTEMPTS = 10;
+    /*
+     * private static final int MIN = 0;
+     * private static final int MAX = 100;
+     * private static final int ATTEMPTS = 10;
+     */
 
     private final DrawNumber model;
     private final List<DrawNumberView> views;
+    private final Configuration configuration;
+    public static final String SEP = File.separator;
 
     /**
      * @param views
@@ -35,7 +41,8 @@ public final class DrawNumberApp implements DrawNumberViewObserver {
             view.setObserver(this);
             view.start();
         }
-        this.model = new DrawNumberImpl(MIN, MAX, ATTEMPTS);
+        this.configuration = getConfiguration();
+        this.model = new DrawNumberImpl(configuration.getMin(), configuration.getMax(), configuration.getAttempts());
     }
 
     @Override
@@ -69,27 +76,28 @@ public final class DrawNumberApp implements DrawNumberViewObserver {
     }
 
     private Configuration getConfiguration() {
-        final String FILE_NAME = "/Users/lorenzomagni/Università/2023-2024/Programmazione ad oggetti/Laboratorio/Esercizi/Lab 10/lab10/102-advanced-mvc/src/main/resources/config.yml";
+        final String FILE_NAME = System.getProperty("user.dir") + SEP + "src" + SEP + "main" + SEP + "resources" + SEP
+                + "config.yml";
         Optional<Integer> min = Optional.empty();
         Optional<Integer> max = Optional.empty();
         Optional<Integer> attempts = Optional.empty();
         String str;
         final Builder builder = new Builder();
         try (final BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(FILE_NAME)))) {
-            while ((str = in.readLine()) != null) {
+            while ((str = in.readLine()) != null && !str.isEmpty()) {
                 final StringTokenizer tokenizer = new StringTokenizer(str);
                 switch (tokenizer.nextToken()) {
-                    case "minimum":
+                    case "minimum:":
                         min = Optional.of(Integer.parseInt(tokenizer.nextToken()));
                         break;
-                    case "maximum":
+                    case "maximum:":
                         max = Optional.of(Integer.parseInt(tokenizer.nextToken()));
                         break;
-                    case "attempts":
+                    case "attempts:":
                         attempts = Optional.of(Integer.parseInt(tokenizer.nextToken()));
                         break;
                     default:
-                        throw new IOException("Error reading the configuration file");
+                        throw new IOException("Unexpected parameters in the configuration file");
                 }
             }
             if (min.isPresent()) {
@@ -102,10 +110,21 @@ public final class DrawNumberApp implements DrawNumberViewObserver {
                 builder.setAttempts(attempts.get());
             }
 
-        } catch (Exception e) {
+        } catch (IOException e) {
             for (final DrawNumberView view : views) {
-                view.displayError(e.getMessage());
+                view.displayError("Error reading the configuration file: " + e.getMessage());
             }
+            quit();
+        } catch (NoSuchElementException e1) {
+            for (final DrawNumberView view : views) {
+                view.displayError("Error in configuration file: " + e1.getMessage());
+            }
+            quit();
+        } catch (NumberFormatException e2) {
+            for (final DrawNumberView view : views) {
+                view.displayError("Configuration file entries only accept integers as parameters: " + e2.getMessage());
+            }
+            quit();
         }
         return builder.build();
     }
