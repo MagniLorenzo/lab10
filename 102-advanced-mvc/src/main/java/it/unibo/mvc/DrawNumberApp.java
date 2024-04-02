@@ -9,7 +9,6 @@ import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Optional;
 import java.util.StringTokenizer;
 
 import it.unibo.mvc.Configuration.Builder;
@@ -78,9 +77,6 @@ public final class DrawNumberApp implements DrawNumberViewObserver {
     private Configuration getConfiguration() {
         final String FILE_NAME = System.getProperty("user.dir") + SEP + "src" + SEP + "main" + SEP + "resources" + SEP
                 + "config.yml";
-        Optional<Integer> min = Optional.empty();
-        Optional<Integer> max = Optional.empty();
-        Optional<Integer> attempts = Optional.empty();
         String str;
         final Builder builder = new Builder();
         try (final BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(FILE_NAME)))) {
@@ -88,28 +84,18 @@ public final class DrawNumberApp implements DrawNumberViewObserver {
                 final StringTokenizer tokenizer = new StringTokenizer(str);
                 switch (tokenizer.nextToken()) {
                     case "minimum:":
-                        min = Optional.of(Integer.parseInt(tokenizer.nextToken()));
+                        builder.setMin(Integer.parseInt(tokenizer.nextToken()));
                         break;
                     case "maximum:":
-                        max = Optional.of(Integer.parseInt(tokenizer.nextToken()));
+                        builder.setMax(Integer.parseInt(tokenizer.nextToken()));
                         break;
                     case "attempts:":
-                        attempts = Optional.of(Integer.parseInt(tokenizer.nextToken()));
+                        builder.setAttempts(Integer.parseInt(tokenizer.nextToken()));
                         break;
                     default:
                         throw new IOException("Unexpected parameters in the configuration file");
                 }
             }
-            if (min.isPresent()) {
-                builder.setMin(min.get());
-            }
-            if (max.isPresent()) {
-                builder.setMax(max.get());
-            }
-            if (attempts.isPresent()) {
-                builder.setAttempts(attempts.get());
-            }
-
         } catch (IOException e) {
             for (final DrawNumberView view : views) {
                 view.displayError("Error reading the configuration file: " + e.getMessage());
