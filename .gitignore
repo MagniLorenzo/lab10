@@ -10,3 +10,4 @@ bin/
 build
 .DS_Store
 **/.idea/
+*.log
